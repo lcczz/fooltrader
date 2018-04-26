@@ -159,22 +159,25 @@ def crawl_index_quote():
                                                        "the_dates": dates})
 
 
-def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, crawl_tick=True):
+def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, crawl_tick=False):
     # 抓取股票k线
     for _, security_item in get_security_list(start=start_code, end=end_code).iterrows():
         # 抓取日K线
         logger.info("{} get stock kdata start".format(security_item['code']))
+        print("{} get stock kdata start".format(security_item['code']))
 
         start_date = get_latest_download_trading_date(security_item, source='163')
         end_date = pd.Timestamp.today()
         if start_date > end_date:
             logger.info("{} stock kdata is ok".format(security_item['code']))
+            print("{} stock kdata is ok".format(security_item['code']))
         else:
             process_crawl(StockKdataSpider163, {"security_item": security_item,
                                                 "start_date": start_date,
                                                 "end_date": end_date})
 
         logger.info("{} get stock kdata from 163 end".format(security_item['code']))
+        print("{} get stock kdata from 163 end".format(security_item['code']))
 
         base_dates = set(get_trading_dates(security_item, source='163'))
         for fuquan in ('bfq', 'hfq'):
@@ -182,12 +185,16 @@ def crawl_stock_quote(start_code=STOCK_START_CODE, end_code=STOCK_END_CODE, craw
             diff_dates = base_dates - sina_dates
             if diff_dates:
                 logger.info("{} get {} kdata from sina start".format(security_item['code'], fuquan))
+                print("{} get {} kdata from sina start".format(security_item['code'], fuquan))
                 process_crawl(StockKDataSpider, {"security_item": security_item,
                                                  "trading_dates": diff_dates,
                                                  "fuquan": fuquan})
                 logger.info("{} get {} kdata from sina end".format(security_item['code'], fuquan))
+                print("{} get {} kdata from sina end".format(security_item['code'], fuquan))
             else:
                 logger.info("{} {} kdata from sina is ok".format(security_item['code'], fuquan))
+                print("{} {} kdata from sina is ok".format(security_item['code'], fuquan))
+
 
         # 抓取tick
         if crawl_tick:
@@ -212,6 +219,6 @@ if __name__ == '__main__':
 
     # crawl_stock_meta()
     # crawl_index_quote()
-    # crawl_stock_quote(args.start_code, args.end_code)
-    crawl_finance_data(args.start_code, args.end_code)
+    crawl_stock_quote(args.start_code, args.end_code)
+    #crawl_finance_data(args.start_code, args.end_code)
     # crawl_usa_stock_data()
