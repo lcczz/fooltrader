@@ -137,6 +137,7 @@ def crawl_index_quote():
         if start_date > end_date:
             logger.info("{} kdata is ok".format(security_item['code']))
         else:
+            logger.info("{} kdata getting from {} to {}".format(security_item['code'],start_date,end_date))
             process_crawl(StockKdataSpider163, {"security_item": security_item,
                                                 "start_date": start_date,
                                                 "end_date": end_date})
@@ -144,7 +145,8 @@ def crawl_index_quote():
         logger.info("{} get index kdata from 163 end".format(security_item['code']))
 
         # 获取市场概况数据[上海,深圳,中小板,创业板]
-        if security_item['id'] in ['index_sh_000001', 'index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
+        #if security_item['id'] in ['index_sh_000001', 'index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
+        if security_item['id'] in ['index_sh_00001', 'index_sz_39916', 'index_sz_39905', 'index_sz_39906']:
             # if security_item['id'] in ['index_sz_399106', 'index_sz_399005', 'index_sz_399006']:
             df = get_kdata(security_item=security_item)
             df = df[df['turnoverRate'].isna() | df['tCap'].isna() | df['mCap'].isna() | df[
@@ -154,6 +156,9 @@ def crawl_index_quote():
                 # if security_item['id'] == 'index_sz_399106':
                 # dates = [the_date for the_date in dates if
                 #          pd.Timestamp(the_date).date().year >= 2018]
+                logger.info(dates)
+                print(dates)
+                logger.info("starting to get summary {}".format(security_item['code']))
                 if dates:
                     process_crawl(StockSummarySpider, {"security_item": security_item,
                                                        "the_dates": dates})

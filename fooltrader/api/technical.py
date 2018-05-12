@@ -3,6 +3,7 @@
 import pandas as pd
 
 from fooltrader.api import quote
+import datetime
 
 
 def ma(security_item, start_date, end_date, level='day', fuquan='qfq', source='163', window=5,
@@ -153,9 +154,40 @@ def macd(security_item, start_date, end_date, level='day', fuquan='qfq', source=
 
     return result
 
+def newhighergenerator(start_date,fuquan='qfq',source='163',period=20):
+
+    baseindex = 'index_sh_000001'
+    df = quote.get_kdata(baseindex,start_date=start_date,source=source)
+    #df = quote.get_kdata('index_sh_000001',start_date='2017-05-10',source='163')
+    dh = pd.DataFrame(0,index=df.index,columns=['total'])      #暂时只添加total，后续需要添加各个市场total
+    #stocklist = quote.get_security_list(security_type='stock', mode='simple')
+    stocklist = quote.get_security_list(security_type='stock',start='600000',end='600030', mode='simple')
+    for _, item in stocklist.iterrows():
+        print("caculating {}".format(item.id))
+        for ts in dh.index:
+            if((ts-datetime.datetime.strptime(item.listDate,'%Y-%m-%d')).days<period):
+                dh.at[ts,item.id] = 0
+            else:
+                ds = quote.get_kdata(item.id,fuquan=fuquan)
+                indexlist = list(ds['timestamp'])
+                tsstr = ts.strftime('%Y-%m-%d')
+                if(tsstr in indexlist):
+                    pos = list(ds['timestamp']).index(ts.strftime('%Y-%m-%d'))
+                    if (ds['close'][pos] >= max(ds['close'][pos -period+1 :pos + 1])):
+                        dh.at[ts, item.id] = 1
+                    else:
+                        dh.at[ts, item.id] = 0
+                else:
+                    dh.at[ts,item.id] = 0
+
+    df['total'] = dh.apply(lambda x:x.sum(),axis=1)
+    df['index_c'] = df['close']
+    dh.to_csv('newhigher.csv')
+    return True
 
 if __name__ == '__main__':
     # print(ma(security_item='000002', start_date='2017-01-01', end_date='2017-12-31'))
     # print(ema(security_item='000002', start_date='20171101', end_date='20171201'))
     # print(ema(get_security_item('000001'), start='20171101', end='20171201'))
-    print(macd(security_item='000002', start_date='20170101', end_date='20171201'))
+    #print(macd(security_item='000002', start_date='20170101', end_date='20171201'))
+    newhighergenerator('2005-01-01')

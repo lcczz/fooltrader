@@ -35,6 +35,19 @@ class SecurityListSpider(scrapy.Spider):
             meta={'exchange': 'sz'},
             callback=self.download_stock_list)
 
+        yield Request(
+            # zx
+            url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=xlsx&CATALOGID=1743_sme&tab1PAGENO=1&ENCODE=1&TABKEY=tab1',
+            headers=DEFAULT_SZ_HEADER,
+            meta={'exchange': 'zx'},
+            callback=self.download_stock_list)
+
+        yield Request(
+            # cy
+            url='http://www.szse.cn/szseWeb/ShowReport.szse?SHOWTYPE=xlsx&CATALOGID=1743_nm&tab1PAGENO=1&ENCODE=1&TABKEY=tab1',
+            headers=DEFAULT_SZ_HEADER,
+            meta={'exchange': 'cy'},
+            callback=self.download_stock_list)
     def download_stock_list(self, response):
         exchange = response.meta['exchange']
         path = files_contract.get_security_list_path('stock', exchange)
@@ -42,6 +55,10 @@ class SecurityListSpider(scrapy.Spider):
         if exchange == 'sh':
             df = pd.read_csv(io.BytesIO(response.body), sep='\s+', encoding='GB2312', dtype=str)
         elif exchange == 'sz':
+            df = pd.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', dtype=str)
+        elif exchange == 'zx':
+            df = pd.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', dtype=str)
+        elif exchange == 'cy':
             df = pd.read_excel(io.BytesIO(response.body), sheet_name='上市公司列表', dtype=str)
         if df is not None:
             if os.path.exists(path):
